@@ -1,4 +1,5 @@
 build/*
+EVALB
 
 # Compiled Object files
 *.slo
