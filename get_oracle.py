@@ -181,11 +181,15 @@ def main():
         tags, tokens, lowercase = get_tags_tokens_lowercase(line)
         assert len(tags) == len(tokens)
         assert len(tokens) == len(lowercase)
-        print ' '.join(tags)
-        print ' '.join(tokens)
-        print ' '.join(lowercase)
+        s = ' ' if tags and tags[0] == '#' else ''
+        print s + ' '.join(tags)
+        s = ' ' if tokens and tokens[0] == '#' else ''
+        print s + ' '.join(tokens)
+        s = ' ' if lowercase and lowercase[0] == '#' else ''
+        print s + ' '.join(lowercase)
         unkified = unkify(tokens, words_list)    
-        print ' '.join(unkified)
+        s = ' ' if unkified and unkified[0] == '#' else ''
+        print s + ' '.join(unkified)
         output_actions = get_actions(line)
         for action in output_actions:
             print action

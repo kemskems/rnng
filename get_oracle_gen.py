@@ -182,10 +182,12 @@ def main():
         assert len(tags) == len(tokens)
         assert len(tokens) == len(lowercase)
         #print ' '.join(tags)
-        print ' '.join(tokens)
+        s = ' ' if tokens and tokens[0] == '#' else ''
+        print s + ' '.join(tokens)
         #print ' '.join(lowercase)
         unkified = unkify(tokens, words_list)    
-        print ' '.join(unkified)
+        s = ' ' if unkified and unkified[0] == '#' else ''
+        print s + ' '.join(unkified)
         output_actions = get_actions(line)
         for action in output_actions:
             print action
