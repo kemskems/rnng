@@ -1,6 +1,9 @@
 build/*
 EVALB
 
+# Python cache files
+*.pyc
+
 # Compiled Object files
 *.slo
 *.lo
