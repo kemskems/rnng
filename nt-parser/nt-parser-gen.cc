@@ -602,13 +602,15 @@ int main(int argc, char** argv) {
       llh = trs = right = words = 0;
       static int logc = 0;
       ++logc;
+      /*
       if (logc > 50) {
         // generate random sample
         ComputationGraph cg;
         double x;
         parser.log_prob_parser(&cg, parser::Sentence(), vector<int>(),&x,true);
       }
-      if (logc % 100 == 0) { // report on dev set
+      */
+      if (logc % 5 == 0) { // report on dev set
         unsigned dev_size = dev_corpus.size();
         double llh = 0;
         double trs = 0;
