@@ -87,6 +87,7 @@ void InitCommandLine(int argc, char** argv, po::variables_map* conf) {
         ("train,t", "Should training be run?")
         ("words,w", po::value<string>(), "Pretrained word embeddings")
         ("beam_size,b", po::value<unsigned>()->default_value(1), "beam size")
+        ("python", po::value<string>()->default_value("python"), "path to python binary")
         ("help,h", "Help");
   po::options_description dcmdline_options;
   dcmdline_options.add(opts);
@@ -671,7 +672,7 @@ vector<unsigned> log_prob_parser_beam(ComputationGraph* hg,
     pq.push_back(init);
     vector<ParserState> completed;
 
-     
+
     while (pq.size()>0) {
       const ParserState cur = pq.back();
       pq.pop_back();
@@ -862,7 +863,7 @@ void signal_callback_handler(int /* signum */) {
 int main(int argc, char** argv) {
   cnn::Initialize(argc, argv);
 
-  cerr << "COMMAND LINE:"; 
+  cerr << "COMMAND LINE:";
   for (unsigned i = 0; i < static_cast<unsigned>(argc); ++i) cerr << ' ' << argv[i];
   cerr << endl;
   unsigned status_every_i_iterations = 100;
@@ -892,7 +893,7 @@ int main(int argc, char** argv) {
     N_SAMPLES = conf["samples"].as<unsigned>();
     if (N_SAMPLES == 0) { cerr << "Please specify N>0 samples\n"; abort(); }
   }
-  
+
   ostringstream os;
   os << "ntparse"
      << (USE_POS ? "_pos" : "")
@@ -912,7 +913,7 @@ int main(int argc, char** argv) {
   parser::TopDownOracle corpus(&termdict, &adict, &posdict, &ntermdict);
   parser::TopDownOracle dev_corpus(&termdict, &adict, &posdict, &ntermdict);
   parser::TopDownOracle test_corpus(&termdict, &adict, &posdict, &ntermdict);
-  corpus.load_oracle(conf["training_data"].as<string>(), true);	
+  corpus.load_oracle(conf["training_data"].as<string>(), true);
   corpus.load_bdata(conf["bracketing_dev_data"].as<string>());
 
   if (conf.count("words"))
@@ -1078,16 +1079,20 @@ int main(int argc, char** argv) {
         double err = (trs - right) / trs;
         cerr << "Dev output in " << pfx << endl;
         //parser::EvalBResults res = parser::Evaluate("foo", pfx);
-	std::string command="python remove_dev_unk.py "+ corpus.devdata +" "+pfx+" > evaluable.txt";
-	const char* cmd=command.c_str();
-	system(cmd);
+        std::string pid = std::to_string(getpid());
+        std::string evaluable_fname = "evaluable-" + pid + ".txt";
+        std::string evalbout_fname = "evalbout-" + pid + ".txt";
+        std::string python = conf["python"].as<string>();
+        std::string command=python + " remove_dev_unk.py " +  corpus.devdata  + " " + pfx + " > " + evaluable_fname;
+        const char* cmd=command.c_str();
+        system(cmd);
 
-        std::string command2="EVALB/evalb -p EVALB/COLLINS.prm "+corpus.devdata+" evaluable.txt>evalbout.txt";
+        std::string command2="EVALB/evalb -p EVALB/COLLINS.prm " + corpus.devdata + " " + evaluable_fname + ">" + evalbout_fname;
         const char* cmd2=command2.c_str();
 
         system(cmd2);
-        
-        std::ifstream evalfile("evalbout.txt");
+
+        std::ifstream evalfile(evalbout_fname);
         std::string lineS;
         std::string brackstr="Bracketing FMeasure";
         double newfmeasure=0.0;
@@ -1103,9 +1108,9 @@ int main(int argc, char** argv) {
 			//std::cout<<strfmeasure<<"\n";
 		}
         }
-        
- 
-        
+
+
+
         cerr << "  **dev (iter=" << iter << " epoch=" << (tot_seen / corpus.size()) << ")\tllh=" << llh << " ppl: " << exp(llh / dwords) << " f1: " << newfmeasure << " err: " << err << "\t[" << dev_size << " sents in " << chrono::duration<double, milli>(t_end-t_start).count() << " ms]" << endl;
 //        if (err < best_dev_err && (tot_seen / corpus.size()) > 1.0) {
        if (newfmeasure>bestf1) {
@@ -1120,9 +1125,9 @@ int main(int argc, char** argv) {
           // easier to refer to it in a shell script.
           if (!softlinkCreated) {
             string softlink = " latest_model";
-            if (system((string("rm -f ") + softlink).c_str()) == 0 && 
+            if (system((string("rm -f ") + softlink).c_str()) == 0 &&
                 system((string("ln -s ") + fname + softlink).c_str()) == 0) {
-              cerr << "Created " << softlink << " as a soft link to " << fname 
+              cerr << "Created " << softlink << " as a soft link to " << fname
                    << " for convenience." << endl;
             }
             softlinkCreated = true;
@@ -1210,16 +1215,20 @@ int main(int argc, char** argv) {
         double err = (trs - right) / trs;
         cerr << "Test output in " << pfx << endl;
         //parser::EvalBResults res = parser::Evaluate("foo", pfx);
-        std::string command="python remove_dev_unk.py "+ corpus.devdata +" "+pfx+" > evaluable.txt";
+        std::string pid = std::to_string(getpid());
+        std::string evaluable_fname = "evaluable-" + pid + ".txt";
+        std::string evalbout_fname = "evalbout-" + pid + ".txt";
+        std::string python = conf["python"].as<string>();
+        std::string command=python + " remove_dev_unk.py " +  corpus.devdata  + " " + pfx + " > " + evaluable_fname;
         const char* cmd=command.c_str();
         system(cmd);
 
-        std::string command2="EVALB/evalb -p EVALB/COLLINS.prm "+corpus.devdata+" evaluable.txt>evalbout.txt";
+        std::string command2="EVALB/evalb -p EVALB/COLLINS.prm " + corpus.devdata + " " + evaluable_fname + ">" + evalbout_fname;
         const char* cmd2=command2.c_str();
 
         system(cmd2);
 
-        std::ifstream evalfile("evalbout.txt");
+        std::ifstream evalfile(evalbout_fname);
         std::string lineS;
         std::string brackstr="Bracketing FMeasure";
         double newfmeasure=0.0;
@@ -1236,6 +1245,6 @@ int main(int argc, char** argv) {
         }
 
        cerr<<"F1score: "<<newfmeasure<<"\n";
-    
+
   }
 }
