@@ -88,6 +88,7 @@ void InitCommandLine(int argc, char** argv, po::variables_map* conf) {
         ("words,w", po::value<string>(), "Pretrained word embeddings")
         ("beam_size,b", po::value<unsigned>()->default_value(1), "beam size")
         ("python", po::value<string>()->default_value("python"), "path to python binary")
+        ("model_dir", po::value<string>()->default_value("."), "directory to save the model in")
         ("help,h", "Help");
   po::options_description dcmdline_options;
   dcmdline_options.add(opts);
@@ -895,7 +896,8 @@ int main(int argc, char** argv) {
   }
 
   ostringstream os;
-  os << "ntparse"
+  os << conf["model_dir"].as<string>() << "/"
+     << "ntparse"
      << (USE_POS ? "_pos" : "")
      << '_' << IMPLICIT_REDUCE_AFTER_SHIFT
      << '_' << LAYERS

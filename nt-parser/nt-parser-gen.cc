@@ -79,6 +79,7 @@ void InitCommandLine(int argc, char** argv, po::variables_map* conf) {
         ("lstm_input_dim", po::value<unsigned>()->default_value(60), "LSTM input dimension")
         ("train,t", "Should training be run?")
         ("words,w", po::value<string>(), "Pretrained word embeddings")
+        ("model_dir", po::value<string>()->default_value("."), "directory to save the model in")
         ("help,h", "Help");
   po::options_description dcmdline_options;
   dcmdline_options.add(opts);
@@ -485,7 +486,8 @@ int main(int argc, char** argv) {
     return 1;
   }
   ostringstream os;
-  os << "ntparse_gen"
+  os << conf["model_dir"].as<string>() << "/"
+     << "ntparse_gen"
      << "_D" << DROPOUT
      << '_' << LAYERS
      << '_' << INPUT_DIM
