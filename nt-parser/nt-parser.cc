@@ -88,7 +88,8 @@ void InitCommandLine(int argc, char** argv, po::variables_map* conf) {
         ("words,w", po::value<string>(), "Pretrained word embeddings")
         ("beam_size,b", po::value<unsigned>()->default_value(1), "beam size")
         ("python", po::value<string>()->default_value("python"), "path to python binary")
-        ("model_dir", po::value<string>()->default_value("."), "directory to save the model in")
+        ("model_dir", po::value<string>()->default_value("."), "Directory to save the model in")
+        ("start_epoch", po::value<float>(), "Starting epoch")
         ("help,h", "Help");
   po::options_description dcmdline_options;
   dcmdline_options.add(opts);
@@ -980,6 +981,12 @@ int main(int argc, char** argv) {
     //MomentumSGDTrainer sgd(&model);
     //sgd.eta_decay = 0.08;
     sgd.eta_decay = 0.05;
+    if (conf.count("start_epoch")) {
+      float start_epoch = conf["start_epoch"].as<float>();
+      cerr << "Start from epoch: " << start_epoch << endl;
+      sgd.update_epoch(start_epoch);
+      cerr << "Eta: " << sgd.eta << endl;
+    }
     vector<unsigned> order(corpus.sents.size());
     for (unsigned i = 0; i < corpus.sents.size(); ++i)
       order[i] = i;
